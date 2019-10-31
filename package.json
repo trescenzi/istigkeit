@@ -1,0 +1,14 @@
+{
+  "name": "istigkeit",
+  "version": "1.0.0",
+  "description": "Color is Opacity is Color",
+  "main": "index.js",
+  "author": "Thomas Crescenzi",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.6.4",
+    "@babel/preset-env": "^7.6.3",
+    "babel-jest": "^24.9.0",
+    "jest": "^24.9.0"
+  }
+}
