@@ -5,6 +5,9 @@
   "main": "index.js",
   "author": "Thomas Crescenzi",
   "license": "MIT",
+  "scripts": {
+    "test": "yarn jest --silent"
+  },
   "devDependencies": {
     "@babel/core": "^7.6.4",
     "@babel/preset-env": "^7.6.3",
