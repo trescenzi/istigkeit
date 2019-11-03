@@ -2,7 +2,6 @@ const HexGroup = "[0-9A-Fa-f]";
 const HexPattern = new RegExp(
   `#(${HexGroup}{1,2})(${HexGroup}{1,2})(${HexGroup}{1,2})(${HexGroup}{0,2})$`
 );
-const RgbPattern = /rgba?\((\d{1,3}), ?(\d{1,3}), ?(\d{1,3})(?:, ?(\d{1,3}))?\)/;
 export const isHex = string => string.match(HexPattern);
 export const isRGB = string => string.match(RgbPattern);
 const hexToDec = (hexStr = "") =>
@@ -45,14 +44,54 @@ export function hexToColor(string) {
   }
 }
 export function rgbToColor(string) {
-  const [_, red, green, blue, alpha] = string.match(RgbPattern);
+  try {
+    let [red = "", green = "", blue = "", alpha = "1"] = string
+      .substring(string.indexOf("(") + 1, string.length - 1)
+      .split(",");
+    if (red.includes("%")) {
+      red = (parseInt(red.slice(0, -1)) * 255) / 100;
+    }
+    if (green.includes("%")) {
+      green = (parseInt(green.slice(0, -1)) * 255) / 100;
+    }
+    if (blue.includes("%")) {
+      blue = (parseInt(blue.slice(0, -1)) * 255) / 100;
+    }
 
-  return {
-    red: parseInt(red),
-    green: parseInt(green),
-    blue: parseInt(blue),
-    alpha: alpha ? parseInt(alpha) : 1
-  };
+    red = parseFloat(red, 10);
+    blue = parseFloat(blue, 10);
+    green = parseFloat(green, 10);
+    alpha = parseFloat(alpha, 10);
+
+    if (
+      Number.isNaN(red) ||
+      Number.isNaN(blue) ||
+      Number.isNaN(green) ||
+      Number.isNaN(alpha) ||
+      red > 255 ||
+      blue > 255 ||
+      green > 255 ||
+      red < 0 ||
+      blue < 0 ||
+      green < 0 ||
+      alpha > 1 ||
+      alpha < 0
+    ) {
+      console.warn("RGB string provided with invalid values", string);
+      return {};
+    }
+
+    return {
+      red: red,
+      green: green,
+      blue: blue,
+      alpha: alpha
+    };
+  } catch (e) {
+    console.error(e);
+    console.warn("Cannot parse string as RGB", string);
+    return {};
+  }
 }
 
 export const colorToHex = ({ red, green, blue, alpha = 1 }) => {
@@ -69,7 +108,6 @@ export const colorToRgb = ({ red, green, blue, alpha = 1 }) =>
     alpha < 1 ? `, ${alpha}` : ""
   })`;
 export const stringToColor = string => {
-  console.log(string.match);
   if (isHex(string)) {
     return hexToColor(string);
   }
@@ -108,7 +146,6 @@ export const calculateForegroundColor = (background, opacity, target) => ({
 });
 
 const calculateAlphaChannel = (foreground, background, target) => {
-  console.log(foreground, background, target);
   return (target - background) / (foreground - background) || 0;
 };
 export const calculateAlpha = (foreground, background, target) =>

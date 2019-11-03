@@ -3,8 +3,11 @@ import {
   colorToHex,
   calculateTargetColor,
   calculateForegroundColor,
-  calculateAlpha
+  calculateAlpha,
+  rgbToColor,
+  colorToRgb
 } from "./math";
+
 describe("color math", () => {
   describe("hex conversions", () => {
     it("can convert 3 letter hexs to colors", () => {
@@ -87,6 +90,82 @@ describe("color math", () => {
       });
     });
   });
+  describe("rgb conversions", () => {
+    it("can convert alphaless rgb string", () => {
+      expect(rgbToColor("rgb(0,0,0)")).toEqual({
+        red: 0,
+        green: 0,
+        blue: 0,
+        alpha: 1
+      });
+      expect(rgbToColor("rgb(10,10,10)")).toEqual({
+        red: 10,
+        green: 10,
+        blue: 10,
+        alpha: 1
+      });
+      expect(rgbToColor("rgb( 100 , 100 , 100 )")).toEqual({
+        red: 100,
+        green: 100,
+        blue: 100,
+        alpha: 1
+      });
+      expect(rgbToColor("rgb(102,134,255)")).toEqual({
+        red: 102,
+        green: 134,
+        blue: 255,
+        alpha: 1
+      });
+      expect(rgbToColor("rgb(50%,25%,42.1%)")).toEqual({
+        red: 127.5,
+        green: 63.75,
+        blue: 107.1,
+        alpha: 1
+      });
+    });
+    it("can convert rgb with alpha to strings", () => {
+      expect(rgbToColor("rgb(0,0,0,0)")).toEqual({
+        red: 0,
+        green: 0,
+        blue: 0,
+        alpha: 0
+      });
+      expect(rgbToColor("rgb(0,0,0,1)")).toEqual({
+        red: 0,
+        green: 0,
+        blue: 0,
+        alpha: 1
+      });
+      expect(rgbToColor("rgb(0,0,0,.23)")).toEqual({
+        red: 0,
+        green: 0,
+        blue: 0,
+        alpha: 0.23
+      });
+    });
+    describe("error handling", () => {
+      it("rejects rgb with out of bound values", () => {
+        expect(rgbToColor("rgb(-1,-1,-1,-1)")).toEqual({});
+        expect(rgbToColor("rgb(256,0,0,0)")).toEqual({});
+        expect(rgbToColor("rgb(0,256,0,0)")).toEqual({});
+        expect(rgbToColor("rgb(0,0,256,0)")).toEqual({});
+        expect(rgbToColor("rgb(0,0,0,1.3)")).toEqual({});
+        expect(rgbToColor("rgb(125%,0,0,0)")).toEqual({});
+        expect(rgbToColor("rgb(0,125%,0,0)")).toEqual({});
+        expect(rgbToColor("rgb(0,0,125%,0)")).toEqual({});
+      });
+      it("rejects bad rgb strings", () => {
+        expect(rgbToColor("rgb0,0,0,0")).toEqual({});
+        expect(rgbToColor("rgb(0,0,0,0")).toEqual({});
+        expect(rgbToColor("rgb(0,0,0,0")).toEqual({});
+        expect(rgbToColor("rgb(000,0")).toEqual({});
+        expect(rgbToColor("rgb(0000)")).toEqual({});
+        expect(rgbToColor("")).toEqual({});
+        expect(rgbToColor("rgb()")).toEqual({});
+        expect(rgbToColor("rgb(,,,,)")).toEqual({});
+      });
+    });
+  });
   describe("reverse conversions", () => {
     it("can convert color objects to hex", () => {
       let hex = "#000";
@@ -97,6 +176,14 @@ describe("color math", () => {
       expect(colorToHex(hexToColor(hex))).toEqual(hex);
       hex = "#aaffffff";
       expect(colorToHex(hexToColor(hex))).toEqual(hex);
+    });
+    it("can convert color objects to rgb", () => {
+      let rgb = "rgb(0, 0, 0 )";
+      expect(colorToRgb(rgbToColor(rgb))).toEqual(rgb);
+      rgb = "rgb(243, 132, 20% )";
+      expect(colorToRgb(rgbToColor(rgb))).toEqual("rgb(243, 132, 51 )");
+      rgb = "rgba(0, 0, 0 , 0.5)";
+      expect(colorToRgb(rgbToColor(rgb))).toEqual(rgb);
     });
   });
   describe("calculations", () => {
