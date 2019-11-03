@@ -178,11 +178,11 @@ describe("color math", () => {
       expect(colorToHex(hexToColor(hex))).toEqual(hex);
     });
     it("can convert color objects to rgb", () => {
-      let rgb = "rgb(0, 0, 0 )";
+      let rgb = "rgb(0,0,0)";
       expect(colorToRgb(rgbToColor(rgb))).toEqual(rgb);
-      rgb = "rgb(243, 132, 20% )";
-      expect(colorToRgb(rgbToColor(rgb))).toEqual("rgb(243, 132, 51 )");
-      rgb = "rgba(0, 0, 0 , 0.5)";
+      rgb = "rgb(243,132,20%)";
+      expect(colorToRgb(rgbToColor(rgb))).toEqual("rgb(243,132,51)");
+      rgb = "rgba(0,0,0,0.5)";
       expect(colorToRgb(rgbToColor(rgb))).toEqual(rgb);
     });
   });
@@ -206,7 +206,7 @@ describe("color math", () => {
       });
     });
     describe("turning a color into a color + opacity", () => {
-      it("can convert a grey into 50% white on black", () => {
+      it("can convert a grey into 50% black on white", () => {
         const whiteBackground = hexToColor("#000");
         const greyColor = hexToColor("#808080");
         const opacity = 0.5;
@@ -216,7 +216,7 @@ describe("color math", () => {
           red: 255,
           blue: 255,
           green: 255,
-          alpha: 0.5
+          alpha: 1
         });
       });
     });

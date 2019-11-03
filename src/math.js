@@ -2,8 +2,11 @@ const HexGroup = "[0-9A-Fa-f]";
 const HexPattern = new RegExp(
   `#(${HexGroup}{1,2})(${HexGroup}{1,2})(${HexGroup}{1,2})(${HexGroup}{0,2})$`
 );
+const RgbPattern = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/;
 export const isHex = string => string.match(HexPattern);
 export const isRGB = string => string.match(RgbPattern);
+export const isOpacity = opacity =>
+  typeof opacity === "number" && opacity > 0 && opacity <= 1;
 const hexToDec = (hexStr = "") =>
   hexStr.length === 1
     ? parseInt(`${hexStr}${hexStr}`, 16)
@@ -95,9 +98,9 @@ export function rgbToColor(string) {
 }
 
 export const colorToHex = ({ red, green, blue, alpha = 1 }) => {
-  const redHex = decToHex(red);
-  const greenHex = decToHex(green);
-  const blueHex = decToHex(blue);
+  const redHex = decToHex(Math.round(red));
+  const greenHex = decToHex(Math.round(green));
+  const blueHex = decToHex(Math.round(blue));
   const alphaHex = alpha < 1 ? decToHex(alpha * 255) : "";
   return `#${
     alphaHex.length === 1 ? "0" + alphaHex : alphaHex
@@ -106,7 +109,7 @@ export const colorToHex = ({ red, green, blue, alpha = 1 }) => {
 export const colorToRgb = ({ red, green, blue, alpha = 1 }) =>
   `rgb${alpha < 1 ? "a" : ""}(${red}, ${green}, ${blue} ${
     alpha < 1 ? `, ${alpha}` : ""
-  })`;
+  })`.replace(/ /g, "");
 export const stringToColor = string => {
   if (isHex(string)) {
     return hexToColor(string);
@@ -122,6 +125,14 @@ export const stringToColor = string => {
 const calculateTargetChannel = (foreground, background, opacity) =>
   background + (foreground - background) * opacity;
 export const calculateTargetColor = (foreground, background, opacity) => {
+  if (!isColor(foreground) || !isColor(background) || !isOpacity(opacity)) {
+    return {
+      red: 0,
+      green: 0,
+      blue: 0,
+      alpha: 1
+    };
+  }
   return {
     red: Math.round(
       calculateTargetChannel(foreground.red, background.red, opacity)
@@ -137,19 +148,40 @@ export const calculateTargetColor = (foreground, background, opacity) => {
 };
 
 const calculateForegroundChannel = (background, opacity, target) =>
-  Math.min((target - background + background * opacity) / opacity, 255);
-export const calculateForegroundColor = (background, opacity, target) => ({
-  red: calculateForegroundChannel(background.red, opacity, target.red),
-  green: calculateForegroundChannel(background.green, opacity, target.green),
-  blue: calculateForegroundChannel(background.blue, opacity, target.blue),
-  alpha: opacity
-});
+  Math.max(
+    Math.min((target - background + background * opacity) / opacity, 255),
+    0
+  );
+export const calculateForegroundColor = (background, opacity, target) => {
+  if (!isColor(target) || !isColor(background) || !isOpacity(opacity)) {
+    return {
+      red: 0,
+      green: 0,
+      blue: 0,
+      alpha: 1
+    };
+  }
+  const foreground = {
+    red: calculateForegroundChannel(background.red, opacity, target.red),
+    green: calculateForegroundChannel(background.green, opacity, target.green),
+    blue: calculateForegroundChannel(background.blue, opacity, target.blue),
+    alpha: 1
+  };
+  console.log("FOREGTOU", foreground);
+  return foreground;
+};
 
 const calculateAlphaChannel = (foreground, background, target) => {
   return (target - background) / (foreground - background) || 0;
 };
-export const calculateAlpha = (foreground, background, target) =>
-  (calculateAlphaChannel(foreground.red, background.red, target.red) +
-    calculateAlphaChannel(foreground.green, background.green, target.green) +
-    calculateAlphaChannel(foreground.blue, background.blue, target.blue)) /
-  3;
+export const calculateAlpha = (foreground, background, target) => {
+  if (!isColor(foreground) || !isColor(background) || !isColor(target)) {
+    return 1;
+  }
+  const averageOpacity =
+    (calculateAlphaChannel(foreground.red, background.red, target.red) +
+      calculateAlphaChannel(foreground.green, background.green, target.green) +
+      calculateAlphaChannel(foreground.blue, background.blue, target.blue)) /
+    3;
+  return averageOpacity > 1 ? 1 : averageOpacity < 0 ? 0 : averageOpacity;
+};
